@@ -152,7 +152,7 @@ export class Orchestrator {
         role,
         system: def.systemPrompt,
         prompt,
-        context: { plan: planText, artifacts: state.artifacts },
+        context: { plan: planText, artifacts: state.artifacts.map((a) => ({ ...a })) },
       });
 
       task.result = output;
