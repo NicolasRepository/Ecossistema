@@ -57,6 +57,24 @@ Comandos uteis adicionais:
 - `NODE_OPTIONS= bun run typecheck` — checagem de tipos com `tsc --noEmit`.
 - `NODE_OPTIONS= bun test` — testes unitarios do motor de orquestracao.
 
+## Deploy no GitHub Pages
+
+O site e publicado como um **projeto** do GitHub Pages, servido sob o subcaminho
+`https://NicolasRepository.github.io/Ecossistema/`. Tres detalhes garantem que ele
+funcione tanto localmente quanto nesse subcaminho:
+
+1. **Caminhos relativos.** O `index.html` referencia os assets de forma relativa
+   (`./dist/main.js`, `./src/styles.css`) em vez de caminhos absolutos iniciando com
+   `/`. Caminhos absolutos resolveriam contra a raiz do dominio e dariam 404 sob o
+   subcaminho `/Ecossistema/`. As URLs `https://` do import map (esm.sh) permanecem
+   absolutas, pois apontam para o CDN.
+2. **`dist/main.js` versionado.** O GitHub Pages (publicando a partir de um branch)
+   serve apenas arquivos commitados, entao o bundle construido e **commitado** no
+   repositorio. Rode `NODE_OPTIONS= bun run build` para regenerar `dist/main.js` antes
+   de commitar sempre que o codigo-fonte mudar.
+3. **`.nojekyll`.** Um arquivo vazio `.nojekyll` na raiz desativa o processamento do
+   Jekyll, fazendo o Pages servir os arquivos como estao.
+
 ## Restricao offline e o MockLLMProvider
 
 Este projeto foi construido em um ambiente **sem acesso a internet em tempo de
@@ -120,7 +138,9 @@ os cartoes de agente e o registro de atividade continuam funcionando igual.
 ## Estrutura do projeto
 
 ```
-index.html                         # import map (React via CDN) + #root + dist/main.js
+index.html                         # import map (React via CDN) + #root + ./dist/main.js
+.nojekyll                          # desativa o Jekyll no GitHub Pages
+dist/main.js                       # bundle gerado por `bun run build` (commitado p/ Pages)
 dev-server.ts                      # servidor estatico Bun (offline)
 src/
   main.tsx                         # createRoot(<App/>)
