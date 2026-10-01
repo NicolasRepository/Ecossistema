@@ -1,5 +1,6 @@
 import { findAgentForRole, getDefaultAgents, getRoleDefinition } from './agents';
 import type { LLMProvider } from './providers/LLMProvider';
+import { parseGeneratedFiles } from './providers/fileFormat';
 import {
   EXECUTION_ROLES,
   type Agent,
@@ -204,15 +205,25 @@ function setAgentStatus(
   }
 }
 
-function addArtifact(state: PipelineState, role: AgentRoleId, content: string): void {
+function addArtifact(state: PipelineState, role: AgentRoleId, raw: string): void {
   const meta = ROLE_ARTIFACT[role];
-  const summary = content.split('\n').find((l) => l.trim().length > 0) ?? '';
+  // A saida bruta do provider e convertida em arquivos reais; se nenhum
+  // delimitador for encontrado, cai graciosamente para um unico arquivo
+  // usando o caminho padrao do papel.
+  const files = parseGeneratedFiles(raw, meta.path);
+  // Previa concatenada legivel (compat. retroativa / UI).
+  const content = files
+    .map((f) => `// ${f.path}\n${f.content}`)
+    .join('\n\n');
+  const firstLine =
+    files[0]?.content.split('\n').find((l) => l.trim().length > 0) ?? '';
   state.artifacts.push({
-    path: meta.path,
+    path: files[0]?.path ?? meta.path,
     kind: meta.kind,
     producedByRole: role,
+    files,
     content,
-    summary: summary.replace(/^#\s*/, '').trim(),
+    summary: firstLine.replace(/^(#|\/\/|--)\s*/, '').trim(),
   });
 }
 

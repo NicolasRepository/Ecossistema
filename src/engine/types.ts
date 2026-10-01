@@ -75,12 +75,38 @@ export interface LogEntry {
 export type ArtifactKind =
   'plan' | 'architecture' | 'frontend' | 'backend' | 'integration';
 
-/** A deliverable produced by an agent during the pipeline. */
+/**
+ * Um unico arquivo de projeto gerado por um agente.
+ *
+ * Esta e a unidade autoritativa de saida: cada papel pode produzir varios
+ * arquivos, cada um com seu proprio caminho e conteudo reais (codigo de
+ * verdade, nao prosa). O `language` e opcional e serve apenas para dicas de
+ * realce/UI (inferido da extensao quando ausente).
+ */
+export interface GeneratedFile {
+  /** Caminho relativo do arquivo dentro do projeto gerado (ex.: src/App.tsx). */
+  path: string;
+  /** Conteudo textual completo do arquivo. */
+  content: string;
+  /** Linguagem opcional (ex.: 'ts', 'tsx', 'json') para realce na UI. */
+  language?: string;
+}
+
+/**
+ * A deliverable produced by an agent during the pipeline.
+ *
+ * A fonte de verdade e o array `files`: cada papel pode emitir VARIOS arquivos
+ * reais (cada um com caminho + conteudo proprios). O campo `content` e mantido
+ * por compatibilidade como uma visualizacao concatenada legivel dos arquivos.
+ */
 export interface ProjectArtifact {
+  /** Caminho principal/representativo do artefato (primeiro arquivo). */
   path: string;
   kind: ArtifactKind;
   producedByRole: AgentRoleId;
-  /** Full generated content (mock text in the offline engine). */
+  /** Arquivos reais produzidos por este papel (dado autoritativo). */
+  files: GeneratedFile[];
+  /** Previa concatenada legivel dos arquivos (compat. retroativa / UI). */
   content: string;
   /** Short one-line summary for compact UI display. */
   summary: string;

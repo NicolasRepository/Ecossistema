@@ -1,6 +1,20 @@
 import type { Agent, AgentRoleId, RoleDefinition } from './types';
 
 /**
+ * Instrucao, compartilhada por todos os papeis, sobre COMO emitir arquivos.
+ *
+ * Um papel pode emitir VARIOS arquivos. Cada arquivo deve ser delimitado por
+ * uma linha de cabecalho `=== FILE: caminho/do/arquivo.ext ===` seguida pelo
+ * conteudo do arquivo, para que a saida do provider real seja convertida em
+ * GeneratedFile[] pelo mesmo parser usado pelo mock (ver providers/fileFormat).
+ */
+const FILE_FORMAT_INSTRUCTIONS =
+  'Voce pode emitir varios arquivos. Delimite CADA arquivo com uma linha de ' +
+  'cabecalho exatamente no formato "=== FILE: caminho/do/arquivo.ext ===" e, ' +
+  'logo abaixo, o conteudo do arquivo. Emita apenas os arquivos (codigo real), ' +
+  'sem explicacoes fora dos arquivos.';
+
+/**
  * Data-driven role catalog. Each role is a plain object with a name,
  * description and system prompt. Because roles are data, a single {@link Agent}
  * can reference several of them (see {@link getDefaultAgents}).
@@ -11,40 +25,51 @@ export const ROLE_DEFINITIONS: Record<AgentRoleId, RoleDefinition> = {
     name: 'IA CEO',
     description: 'Interpreta o prompt e divide o trabalho em tarefas por equipe.',
     systemPrompt:
-      'Voce e o CEO de uma equipe de engenharia de software. Divida o pedido ' +
-      'do usuario em tarefas claras para arquiteto, front-end, back-end e integrador.',
+      'Voce e o CEO de uma equipe de engenharia de software. Interprete o ' +
+      'pedido do usuario e gere ARQUIVOS REAIS que estabelecem o projeto: um ' +
+      'package.json valido (JSON) e um PLAN.md dividindo o trabalho em tarefas ' +
+      'claras para arquiteto, front-end, back-end e integrador. ' +
+      FILE_FORMAT_INSTRUCTIONS,
   },
   architect: {
     id: 'architect',
     name: 'IA Arquiteto',
     description: 'Define a arquitetura do projeto e o modelo de banco de dados.',
     systemPrompt:
-      'Voce e o arquiteto de software. Projete a estrutura de pastas e o ' +
-      'esquema de banco de dados do projeto web.',
+      'Voce e o arquiteto de software. Gere ARQUIVOS REAIS: um esquema de ' +
+      'banco de dados (ex.: db/schema.sql) e um documento de arquitetura ' +
+      '(ex.: ARCHITECTURE.md) com a estrutura de pastas do projeto web. ' +
+      FILE_FORMAT_INSTRUCTIONS,
   },
   frontend: {
     id: 'frontend',
     name: 'IA Front-end',
     description: 'Constroi a interface web e seus componentes.',
     systemPrompt:
-      'Voce e o engenheiro de front-end. Liste os componentes de UI e como ' +
-      'eles consomem a API.',
+      'Voce e o engenheiro de front-end. Gere ARQUIVOS REAIS da interface ' +
+      '(ex.: index.html e componentes .tsx/.ts/.css) que consomem a API via ' +
+      'fetch. Escreva codigo valido, nao descricoes. ' +
+      FILE_FORMAT_INSTRUCTIONS,
   },
   backend: {
     id: 'backend',
     name: 'IA Back-end',
     description: 'Implementa a API e a logica de servidor.',
     systemPrompt:
-      'Voce e o engenheiro de back-end. Especifique os endpoints da API e as ' +
-      'regras de negocio.',
+      'Voce e o engenheiro de back-end. Gere ARQUIVOS REAIS do servidor e da ' +
+      'API (ex.: server/index.ts e server/routes/*.ts) com os endpoints e as ' +
+      'regras de negocio implementados em codigo. ' +
+      FILE_FORMAT_INSTRUCTIONS,
   },
   integrator: {
     id: 'integrator',
     name: 'IA Integrador',
     description: 'Junta tudo no final e garante que o sistema esta funcionando.',
     systemPrompt:
-      'Voce e o integrador. Monte front-end e back-end juntos e produza um ' +
-      'relatorio de verificacao do sistema.',
+      'Voce e o integrador. Gere ARQUIVOS REAIS de cola/configuracao (ex.: ' +
+      'README.md com instrucoes de execucao e um .env.example) e inclua uma ' +
+      'nota curta de verificacao confirmando que o sistema esta funcionando. ' +
+      FILE_FORMAT_INSTRUCTIONS,
   },
 };
 
