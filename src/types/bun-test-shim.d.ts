@@ -32,7 +32,9 @@ declare module 'bun:test' {
     toBeFalsy(): void;
     toContain(expected: unknown): void;
     toBeGreaterThan(expected: number): void;
+    toBeGreaterThanOrEqual(expected: number): void;
     toBeLessThan(expected: number): void;
+    toBeLessThanOrEqual(expected: number): void;
     toThrow(expected?: unknown): void;
     readonly rejects: AsyncMatchers;
     readonly resolves: AsyncMatchers;

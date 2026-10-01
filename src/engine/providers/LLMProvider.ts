@@ -23,29 +23,17 @@ export interface LLMCompletionRequest {
  * run under INTEGRATIONS_ONLY, so no external LLM API (OpenAI, Anthropic, etc.)
  * is reachable; the app ships with a deterministic `MockLLMProvider`.
  *
- * To use a real model later, implement this interface, for example:
+ * To use a real model, implement this interface. A ready-to-use real backend
+ * ships in `OpenAILLMProvider.ts` (OpenAI-compatible chat-completions). Build
+ * it with a user-provided key and pass it to the Orchestrator instead of the
+ * mock -- no other code needs to change:
  *
- *   class OpenAIProvider implements LLMProvider {
- *     name = 'openai';
- *     async complete(req: LLMCompletionRequest): Promise<string> {
- *       const res = await fetch('https://api.openai.com/v1/chat/completions', {
- *         method: 'POST',
- *         headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
- *         body: JSON.stringify({
- *           model: 'gpt-4o-mini',
- *           messages: [
- *             { role: 'system', content: req.system },
- *             { role: 'user', content: req.prompt },
- *           ],
- *         }),
- *       });
- *       const data = await res.json();
- *       return data.choices[0].message.content;
- *     }
- *   }
+ *   import { OpenAILLMProvider } from './OpenAILLMProvider';
+ *   const provider = new OpenAILLMProvider(apiKey, { model: 'gpt-4o-mini' });
+ *   new Orchestrator(provider).run(prompt);
  *
- * Then pass `new OpenAIProvider()` to the Orchestrator instead of the mock.
- * No other code needs to change.
+ * Both the mock and the real provider emit files in the same delimited format
+ * (see `fileFormat.ts`), parsed into GeneratedFile[] by one shared parser.
  * ===========================================================================
  */
 export interface LLMProvider {

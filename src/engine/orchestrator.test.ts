@@ -37,10 +37,33 @@ describe('Orchestrator.run', () => {
     const integration = state.artifacts.find((a) => a.kind === 'integration');
     expect(integration).toBeDefined();
     expect(integration!.producedByRole).toBe('integrator');
-    expect(integration!.content.length).toBeGreaterThan(0);
-    expect(integration!.content).toContain('TUDO FUNCIONANDO');
+    // Authoritative data is files[]: the integrator emits real files.
+    expect(integration!.files.length).toBeGreaterThanOrEqual(1);
+    const readme = integration!.files.find((f) => f.path === 'README.md');
+    expect(readme).toBeDefined();
+    expect(readme!.content).toContain('TUDO FUNCIONANDO');
     // One artifact per role (ceo + 4 execution roles).
     expect(state.artifacts.length).toBe(ALL_ROLES.length);
+  });
+
+  test('artifacts collectively carry multiple real files across roles', async () => {
+    const state = await newOrchestrator().run(PROMPT);
+    // Every artifact must expose a non-empty files[] with real paths/content.
+    for (const artifact of state.artifacts) {
+      expect(artifact.files.length).toBeGreaterThanOrEqual(1);
+      for (const file of artifact.files) {
+        expect(file.path.length).toBeGreaterThan(0);
+        expect(file.content.length).toBeGreaterThan(0);
+      }
+    }
+    // Collectively there must be MORE files than roles (roles emit multiple).
+    const allFiles = state.artifacts.flatMap((a) => a.files);
+    expect(allFiles.length).toBeGreaterThan(state.artifacts.length);
+    // Distinct real paths exist across roles (e.g. package.json + schema.sql).
+    const paths = new Set(allFiles.map((f) => f.path));
+    expect(paths.has('package.json')).toBe(true);
+    expect(paths.has('db/schema.sql')).toBe(true);
+    expect(paths.has('README.md')).toBe(true);
   });
 
   test('is deterministic across two runs', async () => {
