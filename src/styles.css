@@ -1,0 +1,504 @@
+/* Ecossistema — layout de painel sem dependencias (CSS puro). */
+
+:root {
+  --bg: #0f1420;
+  --bg-panel: #171d2b;
+  --bg-elevated: #1f2740;
+  --border: #2a3350;
+  --text: #e6ebf5;
+  --text-muted: #9aa6c2;
+  --accent: #5b8cff;
+  --accent-strong: #3d6ef0;
+
+  --idle: #6b7694;
+  --working: #e3a008;
+  --done: #30c48d;
+  --error: #ef4e5b;
+
+  --role-ceo: #a855f7;
+  --role-architect: #22b8cf;
+  --role-frontend: #5b8cff;
+  --role-backend: #30c48d;
+  --role-integrator: #f97316;
+
+  --radius: 12px;
+  --gap: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ---- Header ---- */
+.app__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap);
+}
+
+.app__brand h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+}
+
+.app__tagline {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  max-width: 620px;
+}
+
+/* ---- Botoes ---- */
+.btn {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  align-self: flex-start;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+/* ---- Status / progresso ---- */
+.app__status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.status-line__label {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.status-line__value {
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 8px;
+  width: 100%;
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--done));
+  transition: width 0.4s ease;
+}
+
+/* ---- Painel de prompt ---- */
+.prompt-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prompt-panel__label {
+  font-weight: 600;
+}
+
+.prompt-panel__input {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.prompt-panel__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.prompt-panel__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.prompt-panel__examples-label {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.example-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.example-chip:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.example-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Grid principal ---- */
+.app__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas:
+    'agents tasks'
+    'agents log';
+  gap: var(--gap);
+}
+
+.panel--agents {
+  grid-area: agents;
+}
+
+.panel--tasks {
+  grid-area: tasks;
+}
+
+.panel--log {
+  grid-area: log;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.panel__title {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ---- Cartoes de agente ---- */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--gap);
+}
+
+.agent-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--idle);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-card.status-working {
+  border-left-color: var(--working);
+}
+
+.agent-card.status-done {
+  border-left-color: var(--done);
+}
+
+.agent-card.status-error {
+  border-left-color: var(--error);
+}
+
+.agent-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.agent-card__name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.agent-card__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #0b1020;
+  background: var(--idle);
+}
+
+.role-badge--ceo {
+  background: var(--role-ceo);
+}
+.role-badge--architect {
+  background: var(--role-architect);
+}
+.role-badge--frontend {
+  background: var(--role-frontend);
+}
+.role-badge--backend {
+  background: var(--role-backend);
+}
+.role-badge--integrator {
+  background: var(--role-integrator);
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge--idle {
+  background: rgba(107, 118, 148, 0.2);
+  color: var(--idle);
+}
+.status-badge--working {
+  background: rgba(227, 160, 8, 0.18);
+  color: var(--working);
+}
+.status-badge--done {
+  background: rgba(48, 196, 141, 0.18);
+  color: var(--done);
+}
+.status-badge--error {
+  background: rgba(239, 78, 91, 0.18);
+  color: var(--error);
+}
+
+.agent-card__task {
+  margin: 0;
+  font-size: 14px;
+}
+
+.agent-card__label {
+  color: var(--text-muted);
+}
+
+.agent-card__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.agent-card__output summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.agent-card__output pre {
+  margin: 8px 0 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow: auto;
+}
+
+/* ---- Quadro de tarefas ---- */
+.task-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-board--empty,
+.activity-log--empty {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.task-dot,
+.log-level {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--idle);
+}
+
+.status-dot--working {
+  background: var(--working);
+}
+.status-dot--done {
+  background: var(--done);
+}
+.status-dot--error {
+  background: var(--error);
+}
+
+.task-row__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.task-row__role {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.task-row__title {
+  font-size: 14px;
+}
+
+/* ---- Registro de atividade ---- */
+.activity-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.log-level--success {
+  background: var(--done);
+}
+.log-level--warning {
+  background: var(--working);
+}
+.log-level--error {
+  background: var(--error);
+}
+.log-level--info {
+  background: var(--accent);
+}
+
+.log-entry__role {
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.log-entry__message {
+  flex: 1;
+}
+
+/* ---- Responsivo ---- */
+@media (max-width: 860px) {
+  .app__grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'agents'
+      'tasks'
+      'log';
+  }
+}

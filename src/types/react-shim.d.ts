@@ -105,13 +105,20 @@ declare module 'react-dom/client' {
 }
 
 declare namespace JSX {
+  // Align JSX.Element with React's ReactElement so function components whose
+  // bodies return JSX are assignable to FC (which returns ReactElement | null).
   interface Element {
     type: unknown;
     props: unknown;
-    key: unknown;
+    key: string | number | null;
   }
   interface ElementChildrenAttribute {
     children: Record<string, unknown>;
+  }
+  // `key` is a reserved prop handled by React, available on every element and
+  // component without being declared in the component's own props type.
+  interface IntrinsicAttributes {
+    key?: string | number | null;
   }
   // Permissive intrinsic elements: any HTML tag with any props. Keeps the
   // offline typecheck green without reproducing the full DOM typings.

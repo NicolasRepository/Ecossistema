@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ecossistema — Agentes de IA</title>
+    <meta
+      name="description"
+      content="Ecossistema: uma equipe de agentes de IA que constroem um projeto web a partir de um unico prompt."
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+
+    <!--
+      IMPORT MAP: o NAVEGADOR resolve 'react' e 'react-dom' em tempo de execucao
+      a partir do CDN esm.sh. Nada e instalado via npm (o registro esta bloqueado
+      no sandbox). Por isso o navegador precisa de acesso a internet para carregar
+      o React na primeira execucao.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react/jsx-dev-runtime": "https://esm.sh/react@18.3.1/jsx-dev-runtime",
+          "react-dom": "https://esm.sh/react-dom@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      Este aplicativo precisa de JavaScript habilitado para funcionar. Ative o JavaScript
+      no seu navegador e recarregue a pagina.
+    </noscript>
+    <script type="module" src="/dist/main.js"></script>
+  </body>
+</html>
