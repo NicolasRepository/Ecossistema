@@ -1,0 +1,15 @@
+{
+  "name": "ecossistema",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ecossistema: equipe de agentes de IA que constroem um projeto web a partir de um unico prompt.",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "bun build src/main.tsx --outfile dist/main.js --external \"react\" --external \"react-dom\" --external \"react/*\" --external \"react-dom/*\" --target browser",
+    "dev": "bun run dev-server.ts",
+    "test": "bun test",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  }
+}
