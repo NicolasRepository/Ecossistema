@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+# Publica o Ecossistema no GitHub Pages a cada push na main.
+# O build roda com Bun no runner do GitHub (que tem internet), gera
+# dist/main.js e publica a raiz do repo como site estatico.
+
+on:
+  push:
+    branches: [main]
+  # Permite rodar manualmente pela aba "Actions".
+  workflow_dispatch:
+
+# Permissoes minimas necessarias para publicar no Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Garante uma unica publicacao por vez (cancela deploys em andamento).
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.14
+
+      - name: Build (gera dist/main.js)
+        run: bun run build
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empacotar artefato (raiz do repo)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
