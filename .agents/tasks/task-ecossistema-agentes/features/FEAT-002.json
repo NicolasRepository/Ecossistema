@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Build the React + TypeScript (.tsx) web page that drives the engine from FEAT-001: a prompt input to kick off the pipeline, live per-agent status/output cards for the five roles, a task board, and a streaming activity log. Wire the no-bundler runtime (index.html import map + Bun dev server + build) and write the Portuguese README. Depends on FEAT-001.",
+  "status": "pending",
+  "steps": [
+    "Create index.html at repo root: an ESM import map mapping \"react\", \"react-dom\", \"react-dom/client\", \"react/jsx-runtime\", \"react/jsx-dev-runtime\" to esm.sh CDN URLs (pinned React 18 versions), a root <div id=\"root\">, and <script type=\"module\" src=\"/dist/main.js\"></script>. Include a <noscript> and basic meta/lang=\"pt-BR\". The import map means the BROWSER loads React at runtime; nothing is npm-installed.",
+    "Create dev-server.ts: a Bun server (Bun.serve) that serves index.html and static assets, and transpiles .tsx/.ts on the fly OR simply serves the pre-built dist/main.js and rebuilds on request. Simplest robust path: serve dist/main.js (built via `bun run build`) and static files; print the localhost URL. Must run offline with `NODE_OPTIONS= bun run dev-server.ts`.",
+    "Create src/main.tsx: import { createRoot } from 'react-dom/client', mount <App/> into #root.",
+    "Create src/ui/App.tsx: top-level component holding PipelineState via useState; a prompt <textarea> + 'Iniciar' button that constructs a MockLLMProvider + Orchestrator and calls run(prompt, onEvent) updating state on each emitted snapshot (use a small default delay so progress animates). Show overall phase/progress and a reset/'Novo projeto' control. All UI copy in Portuguese.",
+    "Create src/components/AgentCard.tsx: renders one agent with name, its role badges (supports multiple roles), status (idle/working/done/error with color), current task, and latest output; props-typed against engine types.",
+    "Create src/components/TaskBoard.tsx: renders the task list grouped/ordered by role with status indicators.",
+    "Create src/components/ActivityLog.tsx: renders the streaming LogEntry list (newest first or auto-scroll), showing agent/role, message, timestamp, level.",
+    "Create src/components/PromptPanel.tsx: the prompt entry + start button (extracted for clarity), with a few example prompts for web projects.",
+    "Create styles: a single src/styles.css (linked from index.html) OR inline style objects. Prefer a styles.css with a clean dashboard layout (header, prompt panel, agent grid, task board, log). Keep it dependency-free (no CSS framework install).",
+    "Ensure all .tsx typecheck under the react-shim: extend src/types/react-shim.d.ts as needed for any hooks/events/props used so `tsc --noEmit` stays green. Run prettier and eslint.",
+    "Create README.md in Portuguese (pt-BR): describe o projeto 'Ecossistema', o conceito dos agentes de IA (IA CEO, Arquiteto, Front-end, Back-end, Integrador) e que uma IA pode ter mais de uma funcao; como rodar (NODE_OPTIONS= bun run build; NODE_OPTIONS= bun run dev; abrir a URL), explicar a restricao offline (sem acesso a APIs reais de LLM no sandbox, por isso o MockLLMProvider), e documentar claramente o ponto de extensao LLMProvider para plugar um backend real (OpenAI/Anthropic) depois. Explicar o requisito de internet do navegador para o import map (React via CDN).",
+    "Verify end to end: NODE_OPTIONS= tsc --noEmit passes; NODE_OPTIONS= bun run build emits dist/main.js; NODE_OPTIONS= bun test still passes."
+  ],
+  "acceptance_criteria": [
+    "`NODE_OPTIONS= tsc --noEmit -p tsconfig.json` exits 0 (all .tsx typecheck)",
+    "`NODE_OPTIONS= bun run build` succeeds and produces dist/main.js",
+    "index.html contains an import map resolving react and react-dom to a CDN and loads dist/main.js as a module",
+    "The App renders a prompt input, five agent roles are represented (ceo, architect, frontend, backend, integrator) as cards, and starting the pipeline updates agent statuses and the activity log from the orchestrator events",
+    "README.md exists, is written in Portuguese, documents the offline/mock constraint and the LLMProvider extension point",
+    "`NODE_OPTIONS= bun test` still passes (no regressions to the engine)"
+  ],
+  "verification": [
+    "NODE_OPTIONS= tsc --noEmit -p tsconfig.json",
+    "NODE_OPTIONS= bun run build",
+    "NODE_OPTIONS= bun test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

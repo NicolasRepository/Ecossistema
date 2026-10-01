@@ -1,0 +1,12 @@
+dist/
+node_modules/
+.DS_Store
+*.log
+bun.lockb
+
+# Kiro agent/editor local config (not part of the project)
+.kiro
+.kiro/
+.kiro */
+.kiro./
+kiro~1/

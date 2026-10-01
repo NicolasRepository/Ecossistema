@@ -1,0 +1,7 @@
+{
+  "task_id": "task-ecossistema-agentes",
+  "task_description": "Build 'Ecossistema': a React + TypeScript (.tsx) web page that manages a team of AI agents (IA CEO, Arquiteto, Front-end, Back-end, Integrador) which collaboratively build a web programming project from a single user prompt. One agent may hold multiple roles. Ships with a deterministic offline mock agent engine behind a swappable LLMProvider interface (no external LLM API access in the INTEGRATIONS_ONLY sandbox). No-bundler setup (Bun transpile + browser import map to CDN) because the npm registry is blocked. Includes Portuguese README and .gitignore; git left clean and ready to commit (no push, no PR).",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
