@@ -7,7 +7,19 @@ import { TaskBoard } from '../components/TaskBoard';
 import { getDefaultAgents } from '../engine/agents';
 import { Orchestrator } from '../engine/orchestrator';
 import { MockLLMProvider } from '../engine/providers/MockLLMProvider';
-import type { PipelinePhase, PipelineState } from '../engine/types';
+import { OpenAILLMProvider } from '../engine/providers/OpenAILLMProvider';
+import { collectGeneratedFiles, countGeneratedFiles } from '../engine/collectFiles';
+import { createZip } from '../engine/zip';
+import type { LLMProvider } from '../engine/providers/LLMProvider';
+import type {
+  AgentRoleId,
+  PipelinePhase,
+  PipelineState,
+  ProjectArtifact,
+} from '../engine/types';
+
+/** Modelo padrao sugerido para o provider real da OpenAI. */
+const DEFAULT_MODEL = 'gpt-4o-mini';
 
 /** Rotulo em pt-BR para cada fase do pipeline. */
 const PHASE_LABEL: Record<PipelinePhase, string> = {
@@ -43,13 +55,30 @@ function computeProgress(state: PipelineState): number {
   return Math.round(15 + (completed / state.tasks.length) * 85);
 }
 
+/** Agrupa os artefatos por papel que os produziu (para exibir no cartao). */
+function artifactsByRole(state: PipelineState): Map<AgentRoleId, ProjectArtifact[]> {
+  const map = new Map<AgentRoleId, ProjectArtifact[]>();
+  for (const artifact of state.artifacts) {
+    const list = map.get(artifact.producedByRole) ?? [];
+    list.push(artifact);
+    map.set(artifact.producedByRole, list);
+  }
+  return map;
+}
+
 export const App: FC = () => {
   const [prompt, setPrompt] = useState('');
+  // Estado em memoria e por sessao (NAO persistido em localStorage).
+  const [apiKey, setApiKey] = useState('');
+  const [model, setModel] = useState(DEFAULT_MODEL);
   const [state, setState] = useState<PipelineState>(createInitialState);
   const [running, setRunning] = useState(false);
   const runningRef = useRef(false);
 
   const progress = useMemo(() => computeProgress(state), [state]);
+  const byRole = useMemo(() => artifactsByRole(state), [state]);
+  const generatedCount = useMemo(() => countGeneratedFiles(state), [state]);
+  const canDownload = state.done && generatedCount > 0;
 
   const handleStart = useCallback(() => {
     const trimmed = prompt.trim();
@@ -59,9 +88,15 @@ export const App: FC = () => {
     setRunning(true);
     setState({ ...createInitialState(), phase: 'planning', prompt: trimmed });
 
-    // stepDelayMs faz o progresso animar no navegador (nos testes o delay e 0).
-    const orchestrator = new Orchestrator(new MockLLMProvider(), {
-      stepDelayMs: 500,
+    // Selecao de provider: uma chave nao-vazia ativa o provider REAL (OpenAI)
+    // sem delay; a chave vazia mantem o mock deterministico com animacao.
+    const key = apiKey.trim();
+    const useReal = key.length > 0;
+    const provider: LLMProvider = useReal
+      ? new OpenAILLMProvider(key, { model: model.trim() || DEFAULT_MODEL })
+      : new MockLLMProvider();
+    const orchestrator = new Orchestrator(provider, {
+      stepDelayMs: useReal ? 0 : 500,
     });
 
     orchestrator
@@ -87,13 +122,28 @@ export const App: FC = () => {
         runningRef.current = false;
         setRunning(false);
       });
-  }, [prompt]);
+  }, [prompt, apiKey, model]);
 
   const handleReset = useCallback(() => {
     if (runningRef.current) return;
     setPrompt('');
     setState(createInitialState());
   }, []);
+
+  const handleDownload = useCallback(() => {
+    const files = collectGeneratedFiles(state);
+    if (files.length === 0) return;
+
+    const blob = createZip(files);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'ecossistema-projeto.zip';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }, [state]);
 
   return (
     <div className="app">
@@ -105,14 +155,29 @@ export const App: FC = () => {
             prompt.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={handleReset}
-          disabled={running}
-        >
-          Novo projeto
-        </button>
+        <div className="app__actions">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handleDownload}
+            disabled={!canDownload}
+            title={
+              canDownload
+                ? 'Baixa um .zip com todos os arquivos gerados'
+                : 'Disponivel quando o pipeline terminar e houver arquivos gerados'
+            }
+          >
+            Baixar projeto (.zip)
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={handleReset}
+            disabled={running}
+          >
+            Novo projeto
+          </button>
+        </div>
       </header>
 
       <section className="app__status">
@@ -128,7 +193,11 @@ export const App: FC = () => {
       <PromptPanel
         prompt={prompt}
         running={running}
+        apiKey={apiKey}
+        model={model}
         onPromptChange={setPrompt}
+        onApiKeyChange={setApiKey}
+        onModelChange={setModel}
         onStart={handleStart}
       />
 
@@ -137,7 +206,11 @@ export const App: FC = () => {
           <h2 className="panel__title">Agentes</h2>
           <div className="agent-grid">
             {state.agents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                artifacts={agent.roles.flatMap((role) => byRole.get(role) ?? [])}
+              />
             ))}
           </div>
         </section>

@@ -3,8 +3,9 @@
 **Ecossistema** e uma pagina web que gerencia uma equipe de **agentes de IA** que,
 a partir de um unico prompt, planejam e constroem um **projeto de programacao web**.
 Voce descreve o que quer ("crie um app de lista de tarefas com login...") e a equipe
-de agentes divide o trabalho, executa cada etapa e entrega um relatorio final de
-integracao.
+de agentes divide o trabalho, executa cada etapa e entrega **arquivos de codigo reais**
+(cada papel pode produzir varios arquivos, com caminho e conteudo proprios), que podem
+ser baixados em um `.zip`.
 
 ## Conceito: a equipe de agentes
 
@@ -20,6 +21,52 @@ clara:
 | **Integrador** | IA Integrador | Junta tudo no final e garante que o sistema esta funcionando.  |
 
 O fluxo e: **CEO → Arquiteto → Front-end → Back-end → Integrador**.
+
+## Chave de API e escolha de modelo
+
+O painel de prompt tem dois campos (opcionais) para plugar um modelo **real**
+compativel com a OpenAI:
+
+- **Chave de API da OpenAI** (campo de senha).
+- **Modelo** (padrao `gpt-4o-mini`).
+
+Comportamento:
+
+- **Chave preenchida** → o app usa o `OpenAILLMProvider`, que faz chamadas de rede
+  reais com a sua chave e o modelo escolhido.
+- **Chave vazia** → o app roda a **demo offline deterministica** com o
+  `MockLLMProvider` (sem rede, reproduzivel).
+
+> ### ⚠️ Aviso de seguranca (leia antes de colar uma chave)
+>
+> Este e um site **estatico e 100% client-side** (GitHub Pages). Isso significa que:
+>
+> - A chave fica **somente no seu navegador**, em estado de sessao em memoria. Ela
+>   **NAO** e persistida (sem `localStorage`) e **NAO** e commitada em lugar nenhum do
+>   repositorio.
+> - Qualquer pessoa com o **DevTools** aberto na propria maquina consegue ver a chave
+>   enquanto ela esta na memoria da pagina.
+> - A chamada **navegador → OpenAI** pode esbarrar em **CORS**, dependendo do endpoint.
+> - Para um deploy **publico/producao**, o caminho seguro e um **backend/proxy** que
+>   guarde a chave no servidor e nunca a exponha ao cliente.
+>
+> Em resumo: use a chave aqui apenas para testes locais/pessoais; nunca comite uma
+> chave e prefira um proxy de backend em producao.
+
+## Baixar o projeto gerado (.zip)
+
+Quando o pipeline termina e ha pelo menos um arquivo gerado, o botao
+**"Baixar projeto (.zip)"** (no topo da pagina) fica habilitado. Ao clicar, o app
+coleta **todos** os arquivos reais produzidos pelos agentes (preservando os caminhos,
+inclusive subdiretorios como `src/App.tsx`), monta um `.zip` **inteiramente no
+navegador** e dispara o download (`ecossistema-projeto.zip`).
+
+O empacotador de ZIP e uma implementacao **sem dependencias e em repositorio**
+(`src/engine/zip.ts`), do tipo *store-only* (sem compressao, metodo 0): escreve os
+*local file headers*, calcula o **CRC32** por arquivo e monta o *central directory* +
+*end-of-central-directory*. Como nao depende de nenhuma lib externa, funciona offline
+(no sandbox e no navegador) e nao exige entradas no *import map* nem na lista de
+`--external` do build.
 
 ### Uma IA pode ter mais de uma funcao
 
@@ -86,11 +133,14 @@ execucao** e com o registro npm **bloqueado**. Isso tem duas consequencias:
    no `index.html`, apontando para o CDN [esm.sh](https://esm.sh). O codigo da aplicacao
    mantem os imports de `react`/`react-dom` como **externos** no build.
 
-2. **Nao ha chamadas a APIs reais de LLM.** Como o sandbox nao alcanca OpenAI, Anthropic
-   ou similares, a aplicacao usa um **`MockLLMProvider`** deterministico
-   (`src/engine/providers/MockLLMProvider.ts`): dado um papel e o prompt, ele devolve um
-   texto estruturado e previsivel, sem rede e sem aleatoriedade. E isso que torna os
-   testes reproduziveis e permite ver o pipeline funcionando de ponta a ponta offline.
+2. **Chamadas a APIs reais de LLM dependem de rede.** No sandbox nao ha acesso a
+   OpenAI, Anthropic ou similares, entao, por padrao (chave vazia), a aplicacao usa um
+   **`MockLLMProvider`** deterministico (`src/engine/providers/MockLLMProvider.ts`):
+   dado um papel e o prompt, ele devolve **arquivos** estruturados e previsiveis, sem
+   rede e sem aleatoriedade. E isso que torna os testes reproduziveis e permite ver o
+   pipeline funcionando de ponta a ponta offline. Quando ha uma chave de API, o
+   `OpenAILLMProvider` passa a ser usado e faz as chamadas reais (veja a secao
+   "Chave de API e escolha de modelo" acima).
 
 > **O navegador precisa de internet para o import map.** Mesmo rodando o servidor
 > localmente, o navegador busca o React no CDN (esm.sh) na primeira execucao. Em uma
@@ -115,25 +165,26 @@ export interface LLMProvider {
 ```
 
 O `Orchestrator` (`src/engine/orchestrator.ts`) recebe um `LLMProvider` por injecao e
-nao conhece nenhum detalhe de modelo. Para usar um backend real (ex.: OpenAI ou
-Anthropic) quando houver acesso a rede:
+nao conhece nenhum detalhe de modelo. **O provider real ja vem incluido**:
+`OpenAILLMProvider` (`src/engine/providers/OpenAILLMProvider.ts`) implementa
+`LLMProvider` e faz a chamada HTTP a um endpoint compativel com a OpenAI
+(`/v1/chat/completions`), com autenticacao `Bearer <chave>` e modelo configuravel
+(padrao `gpt-4o-mini`).
 
-1. Crie uma classe, por exemplo `OpenAILLMProvider`, que implemente `LLMProvider` e
-   faca a chamada HTTP real dentro de `complete(...)`, retornando o texto gerado.
-2. Troque o provider na UI em `src/ui/App.tsx`, de:
+A propria UI (`src/ui/App.tsx`) ja faz a selecao do provider com base na chave digitada:
 
-   ```ts
-   new Orchestrator(new MockLLMProvider(), { stepDelayMs: 500 });
-   ```
-
-   para:
-
-   ```ts
-   new Orchestrator(new OpenAILLMProvider(apiKey), { stepDelayMs: 0 });
-   ```
+```ts
+const key = apiKey.trim();
+const provider = key.length > 0
+  ? new OpenAILLMProvider(key, { model })      // chave preenchida → modelo real
+  : new MockLLMProvider();                      // chave vazia → demo offline
+new Orchestrator(provider, { stepDelayMs: key.length > 0 ? 0 : 500 });
+```
 
 Nenhuma outra parte do codigo precisa mudar: toda a orquestracao, o quadro de tarefas,
-os cartoes de agente e o registro de atividade continuam funcionando igual.
+os cartoes de agente e o registro de atividade continuam funcionando igual. Lembre-se
+do aviso de seguranca: a chave fica no navegador e, para producao, o recomendado e um
+backend/proxy (veja a secao "Chave de API e escolha de modelo").
 
 ## Estrutura do projeto
 
@@ -152,11 +203,16 @@ src/
     TaskBoard.tsx                  # quadro de tarefas por papel
     ActivityLog.tsx                # registro de atividade em streaming
   engine/                          # motor independente de framework (testavel)
-    types.ts                       # tipos do dominio
+    types.ts                       # tipos do dominio (GeneratedFile, ProjectArtifact...)
     agents.ts                      # elenco e definicoes de papel (dirigidos por dados)
     orchestrator.ts                # pipeline CEO -> ... -> Integrador
+    collectFiles.ts                # achata os arquivos gerados (regra de colisao)
+    zip.ts                         # escritor de ZIP store-only sem dependencias
+    zip.test.ts                    # testes deterministicos do escritor de ZIP
     providers/
       LLMProvider.ts               # interface (ponto de extensao)
-      MockLLMProvider.ts           # implementacao deterministica offline
+      MockLLMProvider.ts           # implementacao deterministica offline (emite arquivos)
+      OpenAILLMProvider.ts         # provider real (OpenAI); precisa de rede + chave
+      fileFormat.ts                # formato delimitado + parser para GeneratedFile[]
   types/react-shim.d.ts            # tipos locais do React (tsc offline sem @types)
 ```

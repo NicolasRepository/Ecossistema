@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { getRoleDefinition } from '../engine/agents';
-import type { Agent, AgentStatus } from '../engine/types';
+import type { Agent, AgentStatus, ProjectArtifact } from '../engine/types';
 
 /** Rotulo em pt-BR para cada status de agente. */
 const STATUS_LABEL: Record<AgentStatus, string> = {
@@ -12,13 +12,18 @@ const STATUS_LABEL: Record<AgentStatus, string> = {
 
 export interface AgentCardProps {
   agent: Agent;
+  /** Artefatos (com arquivos reais) produzidos pelos papeis deste agente. */
+  artifacts?: ProjectArtifact[];
 }
 
 /**
  * Cartao de um agente: nome, os selos dos papeis que ele acumula (suporta
- * multiplos papeis), status com cor, tarefa atual e a ultima saida produzida.
+ * multiplos papeis), status com cor, tarefa atual e os ARQUIVOS REAIS gerados
+ * (caminho + conteudo) por seus papeis.
  */
-export const AgentCard: FC<AgentCardProps> = ({ agent }) => {
+export const AgentCard: FC<AgentCardProps> = ({ agent, artifacts = [] }) => {
+  const files = artifacts.flatMap((a) => a.files);
+
   return (
     <article className={`agent-card status-${agent.status}`}>
       <header className="agent-card__header">
@@ -43,7 +48,19 @@ export const AgentCard: FC<AgentCardProps> = ({ agent }) => {
         </p>
       ) : null}
 
-      {agent.output ? (
+      {files.length > 0 ? (
+        <div className="agent-card__files">
+          <span className="agent-card__label">
+            Arquivos gerados ({files.length}):
+          </span>
+          {files.map((file) => (
+            <details key={file.path} className="file-block">
+              <summary className="file-block__path">{file.path}</summary>
+              <pre className="file-block__content">{file.content}</pre>
+            </details>
+          ))}
+        </div>
+      ) : agent.output ? (
         <details className="agent-card__output">
           <summary>Ultima saida</summary>
           <pre>{agent.output}</pre>

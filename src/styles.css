@@ -111,6 +111,14 @@ body {
   background: transparent;
 }
 
+/* ---- Acoes do cabecalho ---- */
+.app__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
 /* ---- Status / progresso ---- */
 .app__status {
   display: flex;
@@ -209,6 +217,89 @@ body {
 .example-chip:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ---- Campos de provider (chave de API + modelo) ---- */
+.prompt-panel__provider {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prompt-panel__provider:disabled {
+  opacity: 0.6;
+}
+
+.prompt-panel__provider-legend {
+  padding: 0 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prompt-panel__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.field--model {
+  flex: 0 1 220px;
+}
+
+.field__label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.field__input {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.field__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.prompt-panel__provider-mode {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.prompt-panel__warning {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: rgba(227, 160, 8, 0.1);
+  border: 1px solid rgba(227, 160, 8, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.prompt-panel__warning strong {
+  color: var(--working);
 }
 
 /* ---- Grid principal ---- */
@@ -384,6 +475,41 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 240px;
+  overflow: auto;
+}
+
+/* ---- Arquivos reais gerados por papel ---- */
+.agent-card__files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.file-block__path {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+}
+
+.file-block__content {
+  margin: 8px 0 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
   overflow: auto;
 }
 
